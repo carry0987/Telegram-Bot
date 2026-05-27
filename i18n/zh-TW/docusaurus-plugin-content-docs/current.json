@@ -1,0 +1,26 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.docs.category.Architecture": {
+    "message": "架構",
+    "description": "The label for category 'Architecture' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Bot Features": {
+    "message": "Bot 功能",
+    "description": "The label for category 'Bot Features' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Bot Commands and HTTP": {
+    "message": "Bot 指令與 HTTP",
+    "description": "The label for category 'Bot Commands and HTTP' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Operations": {
+    "message": "維運",
+    "description": "The label for category 'Operations' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Development": {
+    "message": "開發",
+    "description": "The label for category 'Development' in sidebar 'docs'"
+  }
+}
