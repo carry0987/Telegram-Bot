@@ -1,0 +1,57 @@
+name: telegram-bot
+
+services:
+  app:
+    build:
+      context: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: ${PORT:-3000}
+      DEBUG: ${DEBUG:-false}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      TZ: UTC
+    depends_on:
+      redis:
+        condition: service_healthy
+    stop_grace_period: 20s
+    networks:
+      - public
+      - private
+    ports:
+      - ${PORT:-3000}:${PORT:-3000}
+
+  redis:
+    image: redis:8.4-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - private
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    command: tunnel --no-autoupdate run
+    depends_on:
+      app:
+        condition: service_started
+    networks:
+      - public
+
+volumes:
+  redis-data:
+
+networks:
+  public:
+    driver: bridge
+  private:
+    internal: true
