@@ -4,11 +4,6 @@ A starter template for building Telegram bots in Go.
 
 The repository includes a runnable application shape with polling and webhook support, command menu sync, health probes, inline and callback demos, and session storage backed by Redis or an in-memory fallback.
 
-Most of the detailed documentation has been moved to the GitHub Pages site:
-
-- Docs: https://carry0987.github.io/Telegram-Bot/
-- Docs source: `gh-pages/`
-
 ## Quick Start
 
 1. Create a bot with BotFather and get the token.
