@@ -1,6 +1,6 @@
 ---
 title: Architecture Overview
-description: Runtime structure and package boundaries of the Telegram bot template.
+description: Runtime structure and package boundaries of the Telegram bot.
 ---
 
 # Architecture Overview

@@ -1,6 +1,6 @@
 ---
 title: Integration Recipes
-description: Practical patterns for extending the bot template with new commands, state, and delivery modes.
+description: Practical patterns for extending the bot with new commands, state, and delivery modes.
 ---
 
 # Integration Recipes

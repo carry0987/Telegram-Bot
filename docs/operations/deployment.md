@@ -1,6 +1,6 @@
 ---
 title: Deployment
-description: Polling and webhook deployment patterns for the Telegram bot template.
+description: Polling and webhook deployment patterns for the Telegram bot.
 ---
 
 # Deployment

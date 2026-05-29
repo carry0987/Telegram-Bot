@@ -335,7 +335,7 @@
     "description": "Homepage hero subtitle"
   },
   "homepage.layout.description": {
-    "message": "Telegram-Bot Template 文件站，涵蓋架構、指令、傳輸模式、session 與維運細節。",
+    "message": "Telegram-Bot 使用手冊，涵蓋架構、指令、傳輸模式、session 與維運細節。",
     "description": "The homepage metadata description"
   },
   "homepage.hero.kicker": {
@@ -343,7 +343,7 @@
     "description": "Homepage hero kicker"
   },
   "homepage.hero.primaryButton": {
-    "message": "進入文件",
+    "message": "進入手冊",
     "description": "Homepage primary CTA"
   },
   "homepage.hero.secondaryButton": {

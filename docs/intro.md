@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: Overview of the Go Telegram-Bot Template and what the documentation covers.
+description: Overview of the Go Telegram-Bot and what the documentation covers.
 ---
 
 # Telegram-Bot

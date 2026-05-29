@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Environment variables and configuration rules for the Telegram bot template.
+description: Environment variables and configuration rules for the Telegram bot.
 ---
 
 # Configuration

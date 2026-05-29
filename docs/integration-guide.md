@@ -1,6 +1,6 @@
 ---
 title: Integration Guide
-description: Extend the Telegram bot template while preserving the current architecture.
+description: Extend the Telegram bot while preserving the current architecture.
 ---
 
 # Integration Guide

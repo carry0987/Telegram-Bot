@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-description: Run the Telegram bot template locally with the minimum required setup.
+description: Run the Telegram bot locally with the minimum required setup.
 ---
 
 # Getting Started

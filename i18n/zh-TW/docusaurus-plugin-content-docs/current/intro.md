@@ -1,9 +1,9 @@
 ---
 title: 介紹
-description: Go Telegram-Bot Template 的整體介紹與文件範圍。
+description: Go Telegram-Bot 的整體介紹與文件範圍。
 ---
 
-# Telegram-Bot Template
+# Telegram-Bot
 
 這個專案是一個用 Go 開發 Telegram-Bot 的起手式模板，不把所有邏輯都塞進單一 `main.go`。它提供可直接運作的 runtime 骨架、實用的指令面、session 儲存、健康檢查，以及同時涵蓋本地開發與正式環境的傳輸模式。
 

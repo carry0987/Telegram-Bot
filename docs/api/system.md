@@ -20,8 +20,8 @@ Example response:
 
 ```json
 {
-  "name": "telegram-bot-template",
-  "description": "Go Telegram-Bot template with health checks, polling, webhook, and session demos",
+  "name": "telegram-bot",
+  "description": "Go Telegram-Bot with health checks, polling, webhook, and session demos",
   "mode": "polling",
   "session": "memory"
 }
@@ -37,7 +37,7 @@ Example response:
 {
   "ok": true,
   "status": "healthy",
-  "service": "telegram-bot-template"
+  "service": "telegram-bot"
 }
 ```
 
