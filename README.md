@@ -1,5 +1,6 @@
 # Telegram-Bot
-
+[![Release](https://github.com/carry0987/Telegram-Bot/actions/workflows/release.yml/badge.svg)](https://github.com/carry0987/Telegram-Bot/actions/workflows/release.yml)
+[![CI](https://github.com/carry0987/Telegram-Bot/actions/workflows/ci.yml/badge.svg)](https://github.com/carry0987/Telegram-Bot/actions/workflows/ci.yml)
 A starter template for building Telegram bots in Go.
 
 The repository includes a runnable application shape with polling and webhook support, command menu sync, health probes, inline and callback demos, and session storage backed by Redis or an in-memory fallback.
