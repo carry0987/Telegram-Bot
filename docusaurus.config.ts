@@ -129,8 +129,8 @@ const config: Config = {
             playgroundPosition: 'bottom',
         },
         algolia: {
-            appId: 'KARSYN8W9L',
-            apiKey: 'a881f0ccad1d269cf7971fe8836e994f',
+            appId: 'M9JROD1YRC',
+            apiKey: '151d8865cacc661344e890cd7de1417d',
             indexName: 'Telegram-Bot Index',
             contextualSearch: true,
             externalUrlRegex: 'external\\.com|domain\\.com',
