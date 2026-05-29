@@ -12,7 +12,7 @@ description: 用最少設定在本地跑起 Telegram bot 模板。
 - Go 1.25 以上
 - 從 BotFather 取得的 Telegram bot token
 - 選用：Docker 與 Docker Compose，用於 Redis 或容器化執行
-- 選用：Node.js 22 與 pnpm，用於本地建置這個 Docusaurus 文件站
+- 選用：Node.js 22 與 pnpm，用於本地建置這個 Docusaurus 使用手冊
 
 ## 1. 取得 bot token
 

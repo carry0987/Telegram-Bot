@@ -331,7 +331,7 @@
     "description": "The site tagline"
   },
   "homepage.hero.subtitle": {
-    "message": "這是一個 Go Telegram bot 模板的文件站，涵蓋 polling、webhook、health probe、inline demo 與可替換的 session storage。",
+    "message": "這是一個 Go Telegram bot 模板的使用手冊，涵蓋 polling、webhook、health probe、inline demo 與可替換的 session storage。",
     "description": "Homepage hero subtitle"
   },
   "homepage.layout.description": {
@@ -371,7 +371,7 @@
     "description": "Homepage validated scope operations bullet"
   },
   "homepage.features.section.title": {
-    "message": "這個文件站涵蓋的內容",
+    "message": "這個使用手冊涵蓋的內容",
     "description": "Homepage features section title"
   },
   "homepage.features.section.description": {
