@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/carry0987/Telegram-Bot/compare/v1.0.0...v1.0.1) (2026-06-22)
+
+
+### Bug Fixes
+
+* Update packages ([b6eec2a](https://github.com/carry0987/Telegram-Bot/commit/b6eec2a888a827ef8ad22066be2dfa93ea8eeb4d))
+
 ## 1.0.0 (2026-05-27)
 
 
