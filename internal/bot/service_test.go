@@ -22,6 +22,7 @@ type stubTelegramClient struct {
 	matchFuncCalled      bool
 	registeredHandlers   []registeredHandler
 	inlineAnswerParams   *tgbot.AnswerInlineQueryParams
+	setMyCommandsParams  *tgbot.SetMyCommandsParams
 	webhookInfo          *models.WebhookInfo
 	setMyCommandsErr     error
 	getWebhookInfoErr    error
@@ -94,9 +95,33 @@ func (s *stubTelegramClient) AnswerCallbackQuery(context.Context, *tgbot.AnswerC
 	return true, nil
 }
 
-func (s *stubTelegramClient) SetMyCommands(context.Context, *tgbot.SetMyCommandsParams) (bool, error) {
+func (s *stubTelegramClient) SetMyCommands(_ context.Context, params *tgbot.SetMyCommandsParams) (bool, error) {
 	s.setMyCommandsCalled = true
+	s.setMyCommandsParams = params
 	return s.setMyCommandsErr == nil, s.setMyCommandsErr
+}
+
+func TestSyncCommandsUsesCentralDefinitions(t *testing.T) {
+	client := &stubTelegramClient{}
+	service := newTestService(client)
+
+	if err := service.syncCommands(context.Background()); err != nil {
+		t.Fatalf("expected syncCommands to succeed, got %v", err)
+	}
+	if client.setMyCommandsParams == nil {
+		t.Fatal("expected syncCommands params to be captured")
+	}
+
+	got := client.setMyCommandsParams.Commands
+	if len(got) != 8 {
+		t.Fatalf("expected 8 synced commands, got %d", len(got))
+	}
+	if got[0].Command != "start" || got[0].Description != "Introduce the bot" {
+		t.Fatalf("unexpected first command: %+v", got[0])
+	}
+	if got[len(got)-1].Command != "session" {
+		t.Fatalf("expected session command last, got %+v", got[len(got)-1])
+	}
 }
 
 func TestPreparePollingSkipsDeleteWebhookWhenNoWebhookConfigured(t *testing.T) {

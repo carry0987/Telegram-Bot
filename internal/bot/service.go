@@ -15,6 +15,18 @@ import (
 	"telegram-bot/internal/session"
 )
 
+const (
+	sessionKeyLastCommand = "last_command"
+	sessionKeyStartVisits = "visits"
+	sessionKeySessionHits = "session_hits"
+)
+
+var replyKeyboardLayout = [][]string{
+	{"help", "ping"},
+	{"menu", "session"},
+	{"hidekeyboard"},
+}
+
 type Service struct {
 	client             telegramClient
 	username           string
@@ -41,6 +53,14 @@ type telegramClient interface {
 	SendMessage(context.Context, *tgbot.SendMessageParams) (*models.Message, error)
 	AnswerCallbackQuery(context.Context, *tgbot.AnswerCallbackQueryParams) (bool, error)
 	SetMyCommands(context.Context, *tgbot.SetMyCommandsParams) (bool, error)
+}
+
+type commandDefinition struct {
+	name               string
+	commandDescription string
+	helpDescription    string
+	matchType          tgbot.MatchType
+	handler            tgbot.HandlerFunc
 }
 
 func New(cfg *config.Config, sessions session.Store) (*Service, error) {
@@ -150,14 +170,9 @@ func (s *Service) WebhookPath() string {
 }
 
 func (s *Service) registerHandlers() {
-	s.client.RegisterHandler(tgbot.HandlerTypeMessageText, "start", tgbot.MatchTypeCommandStartOnly, s.handleStart)
-	s.client.RegisterHandler(tgbot.HandlerTypeMessageText, "help", tgbot.MatchTypeCommandStartOnly, s.handleHelp)
-	s.client.RegisterHandler(tgbot.HandlerTypeMessageText, "ping", tgbot.MatchTypeCommandStartOnly, s.handlePing)
-	s.client.RegisterHandler(tgbot.HandlerTypeMessageText, "echo", tgbot.MatchTypeCommand, s.handleEcho)
-	s.client.RegisterHandler(tgbot.HandlerTypeMessageText, "keyboard", tgbot.MatchTypeCommandStartOnly, s.handleKeyboard)
-	s.client.RegisterHandler(tgbot.HandlerTypeMessageText, "hidekeyboard", tgbot.MatchTypeCommandStartOnly, s.handleHideKeyboard)
-	s.client.RegisterHandler(tgbot.HandlerTypeMessageText, "menu", tgbot.MatchTypeCommandStartOnly, s.handleMenu)
-	s.client.RegisterHandler(tgbot.HandlerTypeMessageText, "session", tgbot.MatchTypeCommandStartOnly, s.handleSession)
+	for _, command := range s.commandDefinitions() {
+		s.client.RegisterHandler(tgbot.HandlerTypeMessageText, command.name, command.matchType, command.handler)
+	}
 	s.client.RegisterHandler(tgbot.HandlerTypeCallbackQueryData, "menu:", tgbot.MatchTypePrefix, s.handleMenuAction)
 	s.client.RegisterHandlerMatchFunc(func(update *models.Update) bool {
 		return update != nil && update.InlineQuery != nil
@@ -186,12 +201,12 @@ func (s *Service) handleStart(ctx context.Context, _ *tgbot.Bot, update *models.
 		name = strings.TrimSpace(message.From.FirstName)
 	}
 
-	visits, err := s.sessions.Increment(ctx, message.Chat.ID, "visits", s.sessionTTL)
+	visits, err := s.sessions.Increment(ctx, message.Chat.ID, sessionKeyStartVisits, s.sessionTTL)
 	if err != nil {
 		slog.Error("increment start visits", "error", err)
 		visits = 1
 	}
-	_ = s.sessions.Set(ctx, message.Chat.ID, "last_command", "/start", s.sessionTTL)
+	s.rememberLastCommand(ctx, message.Chat.ID, "/start")
 
 	text := fmt.Sprintf(
 		"Hello, %s.\nThis repository is a Go Telegram Bot template.\nUse /help to see the available commands.\nUse /keyboard to reopen the reply keyboard later.\nSession visits: %d.",
@@ -216,7 +231,7 @@ func (s *Service) handleHelp(ctx context.Context, _ *tgbot.Bot, update *models.U
 	if err := s.sendText(ctx, message.Chat.ID, s.helpMessage()); err != nil {
 		slog.Error("send help message", "error", err)
 	}
-	_ = s.sessions.Set(ctx, message.Chat.ID, "last_command", "/help", s.sessionTTL)
+	s.rememberLastCommand(ctx, message.Chat.ID, "/help")
 }
 
 func (s *Service) handlePing(ctx context.Context, _ *tgbot.Bot, update *models.Update) {
@@ -228,7 +243,7 @@ func (s *Service) handlePing(ctx context.Context, _ *tgbot.Bot, update *models.U
 	if err := s.sendText(ctx, message.Chat.ID, "pong"); err != nil {
 		slog.Error("send ping message", "error", err)
 	}
-	_ = s.sessions.Set(ctx, message.Chat.ID, "last_command", "/ping", s.sessionTTL)
+	s.rememberLastCommand(ctx, message.Chat.ID, "/ping")
 }
 
 func (s *Service) handleEcho(ctx context.Context, _ *tgbot.Bot, update *models.Update) {
@@ -249,7 +264,7 @@ func (s *Service) handleEcho(ctx context.Context, _ *tgbot.Bot, update *models.U
 	if err := s.sendText(ctx, message.Chat.ID, args); err != nil {
 		slog.Error("send echo reply", "error", err)
 	}
-	_ = s.sessions.Set(ctx, message.Chat.ID, "last_command", "/echo", s.sessionTTL)
+	s.rememberLastCommand(ctx, message.Chat.ID, "/echo")
 }
 
 func (s *Service) handleKeyboard(ctx context.Context, _ *tgbot.Bot, update *models.Update) {
@@ -265,7 +280,7 @@ func (s *Service) handleKeyboard(ctx context.Context, _ *tgbot.Bot, update *mode
 	}); err != nil {
 		slog.Error("send keyboard message", "error", err)
 	}
-	_ = s.sessions.Set(ctx, message.Chat.ID, "last_command", "/keyboard", s.sessionTTL)
+	s.rememberLastCommand(ctx, message.Chat.ID, "/keyboard")
 }
 
 func (s *Service) handleHideKeyboard(ctx context.Context, _ *tgbot.Bot, update *models.Update) {
@@ -281,7 +296,7 @@ func (s *Service) handleHideKeyboard(ctx context.Context, _ *tgbot.Bot, update *
 	}); err != nil {
 		slog.Error("send hide keyboard message", "error", err)
 	}
-	_ = s.sessions.Set(ctx, message.Chat.ID, "last_command", "/hidekeyboard", s.sessionTTL)
+	s.rememberLastCommand(ctx, message.Chat.ID, "/hidekeyboard")
 }
 
 func (s *Service) handleMenu(ctx context.Context, _ *tgbot.Bot, update *models.Update) {
@@ -297,7 +312,7 @@ func (s *Service) handleMenu(ctx context.Context, _ *tgbot.Bot, update *models.U
 	}); err != nil {
 		slog.Error("send menu message", "error", err)
 	}
-	_ = s.sessions.Set(ctx, message.Chat.ID, "last_command", "/menu", s.sessionTTL)
+	s.rememberLastCommand(ctx, message.Chat.ID, "/menu")
 }
 
 func (s *Service) handleSession(ctx context.Context, _ *tgbot.Bot, update *models.Update) {
@@ -306,17 +321,17 @@ func (s *Service) handleSession(ctx context.Context, _ *tgbot.Bot, update *model
 		return
 	}
 
-	visits, err := s.sessions.Increment(ctx, message.Chat.ID, "session_hits", s.sessionTTL)
+	visits, err := s.sessions.Increment(ctx, message.Chat.ID, sessionKeySessionHits, s.sessionTTL)
 	if err != nil {
 		slog.Error("increment session counter", "error", err)
 		return
 	}
 
-	lastCommand, err := s.sessions.Get(ctx, message.Chat.ID, "last_command")
+	lastCommand, err := s.sessions.Get(ctx, message.Chat.ID, sessionKeyLastCommand)
 	if err != nil && err != session.ErrNotFound {
 		slog.Error("get last command", "error", err)
 	}
-	_ = s.sessions.Set(ctx, message.Chat.ID, "last_command", "/session", s.sessionTTL)
+	s.rememberLastCommand(ctx, message.Chat.ID, "/session")
 
 	text := fmt.Sprintf("Session counter: %d\nBackend: %s", visits, s.sessions.Backend())
 	if lastCommand != "" {
@@ -344,7 +359,7 @@ func (s *Service) handleMenuAction(ctx context.Context, _ *tgbot.Bot, update *mo
 	case "help":
 		text = s.helpMessage()
 	case "session":
-		count, err := s.sessions.Increment(ctx, chatID, "session_hits", s.sessionTTL)
+		count, err := s.sessions.Increment(ctx, chatID, sessionKeySessionHits, s.sessionTTL)
 		if err != nil {
 			slog.Error("increment callback session counter", "error", err)
 			text = "Session update failed."
@@ -354,7 +369,7 @@ func (s *Service) handleMenuAction(ctx context.Context, _ *tgbot.Bot, update *mo
 	default:
 		text = "Unknown menu action."
 	}
-	_ = s.sessions.Set(ctx, chatID, "last_command", "menu:"+action, s.sessionTTL)
+	s.rememberLastCommand(ctx, chatID, "menu:"+action)
 
 	if _, err := s.client.AnswerCallbackQuery(ctx, &tgbot.AnswerCallbackQueryParams{
 		CallbackQueryID: callback.ID,
@@ -400,14 +415,12 @@ func (s *Service) sendMessage(ctx context.Context, params *tgbot.SendMessagePara
 func (s *Service) helpMessage() string {
 	var builder strings.Builder
 	builder.WriteString("Available commands:\n")
-	builder.WriteString("/start - introduce the bot\n")
-	builder.WriteString("/help - show this help\n")
-	builder.WriteString("/ping - respond with pong\n")
-	builder.WriteString("/echo <text> - echo the text back\n")
-	builder.WriteString("/keyboard - show reply keyboard demo\n")
-	builder.WriteString("/hidekeyboard - hide reply keyboard\n")
-	builder.WriteString("/menu - show inline keyboard demo\n")
-	builder.WriteString("/session - inspect session state")
+	for index, command := range s.commandDefinitions() {
+		if index > 0 {
+			builder.WriteByte('\n')
+		}
+		_, _ = fmt.Fprintf(&builder, "/%s - %s", command.name, command.helpDescription)
+	}
 
 	if s.username != "" {
 		_, _ = fmt.Fprintf(&builder, "\n\nGroup chats can also use /echo@%s <text>.", s.username)
@@ -426,18 +439,16 @@ func commandArgs(text string) string {
 }
 
 func (s *Service) syncCommands(ctx context.Context) error {
-	_, err := s.client.SetMyCommands(ctx, &tgbot.SetMyCommandsParams{
-		Commands: []models.BotCommand{
-			{Command: "start", Description: "Introduce the bot"},
-			{Command: "help", Description: "Show available commands"},
-			{Command: "ping", Description: "Reply with pong"},
-			{Command: "echo", Description: "Echo text back"},
-			{Command: "keyboard", Description: "Show reply keyboard demo"},
-			{Command: "hidekeyboard", Description: "Hide reply keyboard"},
-			{Command: "menu", Description: "Show inline keyboard demo"},
-			{Command: "session", Description: "Inspect session state"},
-		},
-	})
+	definitions := s.commandDefinitions()
+	commands := make([]models.BotCommand, 0, len(definitions))
+	for _, command := range definitions {
+		commands = append(commands, models.BotCommand{
+			Command:     command.name,
+			Description: command.commandDescription,
+		})
+	}
+
+	_, err := s.client.SetMyCommands(ctx, &tgbot.SetMyCommandsParams{Commands: commands})
 
 	return err
 }
@@ -518,20 +529,17 @@ func (s *Service) inlineMenuMarkup() *models.InlineKeyboardMarkup {
 }
 
 func (s *Service) replyKeyboardMarkup() *models.ReplyKeyboardMarkup {
+	keyboard := make([][]models.KeyboardButton, 0, len(replyKeyboardLayout))
+	for _, row := range replyKeyboardLayout {
+		buttons := make([]models.KeyboardButton, 0, len(row))
+		for _, command := range row {
+			buttons = append(buttons, models.KeyboardButton{Text: "/" + command})
+		}
+		keyboard = append(keyboard, buttons)
+	}
+
 	return &models.ReplyKeyboardMarkup{
-		Keyboard: [][]models.KeyboardButton{
-			{
-				{Text: "/help"},
-				{Text: "/ping"},
-			},
-			{
-				{Text: "/menu"},
-				{Text: "/session"},
-			},
-			{
-				{Text: "/hidekeyboard"},
-			},
-		},
+		Keyboard:              keyboard,
 		IsPersistent:          true,
 		ResizeKeyboard:        true,
 		InputFieldPlaceholder: "Choose a template command",
@@ -540,4 +548,23 @@ func (s *Service) replyKeyboardMarkup() *models.ReplyKeyboardMarkup {
 
 func (s *Service) replyKeyboardRemoveMarkup() *models.ReplyKeyboardRemove {
 	return &models.ReplyKeyboardRemove{RemoveKeyboard: true}
+}
+
+func (s *Service) commandDefinitions() []commandDefinition {
+	return []commandDefinition{
+		{name: "start", commandDescription: "Introduce the bot", helpDescription: "introduce the bot", matchType: tgbot.MatchTypeCommandStartOnly, handler: s.handleStart},
+		{name: "help", commandDescription: "Show available commands", helpDescription: "show this help", matchType: tgbot.MatchTypeCommandStartOnly, handler: s.handleHelp},
+		{name: "ping", commandDescription: "Reply with pong", helpDescription: "respond with pong", matchType: tgbot.MatchTypeCommandStartOnly, handler: s.handlePing},
+		{name: "echo", commandDescription: "Echo text back", helpDescription: "echo the text back", matchType: tgbot.MatchTypeCommand, handler: s.handleEcho},
+		{name: "keyboard", commandDescription: "Show reply keyboard demo", helpDescription: "show reply keyboard demo", matchType: tgbot.MatchTypeCommandStartOnly, handler: s.handleKeyboard},
+		{name: "hidekeyboard", commandDescription: "Hide reply keyboard", helpDescription: "hide reply keyboard", matchType: tgbot.MatchTypeCommandStartOnly, handler: s.handleHideKeyboard},
+		{name: "menu", commandDescription: "Show inline keyboard demo", helpDescription: "show inline keyboard demo", matchType: tgbot.MatchTypeCommandStartOnly, handler: s.handleMenu},
+		{name: "session", commandDescription: "Inspect session state", helpDescription: "inspect session state", matchType: tgbot.MatchTypeCommandStartOnly, handler: s.handleSession},
+	}
+}
+
+func (s *Service) rememberLastCommand(ctx context.Context, chatID int64, command string) {
+	if err := s.sessions.Set(ctx, chatID, sessionKeyLastCommand, command, s.sessionTTL); err != nil {
+		slog.Error("remember last command", "chat_id", chatID, "command", command, "error", err)
+	}
 }
