@@ -14,6 +14,9 @@ upgrade:
 lint:
 	golangci-lint run ./...
 
+fix:
+	$(GO) fix ./...
+
 test:
 	$(GO) test ./...
 
