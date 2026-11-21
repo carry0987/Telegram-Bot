@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/carry0987/Telegram-Bot/compare/v1.0.3...v1.0.4) (2026-11-21)
+
+
+### Bug Fixes
+
+* Update go version ([5e0a2cb](https://github.com/carry0987/Telegram-Bot/commit/5e0a2cb45d714b30d759de6c3d560e96fdb41fbd))
+
 ## [1.0.3](https://github.com/carry0987/Telegram-Bot/compare/v1.0.2...v1.0.3) (2026-10-23)
 
 
